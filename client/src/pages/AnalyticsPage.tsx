@@ -1,6 +1,4 @@
 import { SectionHeader } from "@/components/common/SectionHeader"
-import { RevenueTrend } from "@/components/charts/RevenueTrend"
-import { revenueData } from "@/services/dashboard"
 import { Card, CardContent, CardHeader, CardDescription, CardTitle, Badge } from "@/components/ui"
 
 export function AnalyticsPage() {
@@ -8,7 +6,6 @@ export function AnalyticsPage() {
     <div className="grid gap-6">
       <SectionHeader title="Analytics" description="Deep performance insights across channels, campaigns, and AI engagement." />
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <RevenueTrend data={revenueData} />
         <Card className="border border-border bg-card/90 p-5 shadow-sm">
           <CardHeader className="space-y-3">
             <CardTitle className="text-lg">Performance score</CardTitle>

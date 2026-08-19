@@ -2,6 +2,7 @@ import { useTheme } from "next-themes"
 import { Moon, Search, SunMedium } from "lucide-react"
 import { Button } from "@/components/ui"
 import { useUIStore } from "@/store/ui-store"
+import { ProfileMenu } from "@/components/layout/ProfileMenu"
 
 export function TopNavbar() {
   const { theme, setTheme } = useTheme()
@@ -25,10 +26,7 @@ export function TopNavbar() {
         <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark") }>
           {theme === "dark" ? <SunMedium className="size-5" /> : <Moon className="size-5" />}
         </Button>
-        <div className="hidden items-center gap-3 rounded-2xl border border-border bg-muted/70 px-4 py-2 text-sm text-muted-foreground md:flex">
-          <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">Pro</span>
-          <span>Oakley</span>
-        </div>
+        <ProfileMenu />
       </div>
     </header>
   )

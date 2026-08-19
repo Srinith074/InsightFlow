@@ -1,0 +1,15 @@
+node_modules
+*.tsbuildinfo
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Generated files
+*.tsbuildinfo
+
+# Server generated files
+server/dist/
+server/uploads/
+
+

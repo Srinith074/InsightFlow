@@ -1,13 +1,35 @@
-import { useState, type FormEvent } from "react"
-import { Link } from "react-router-dom"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Button } from "@/components/ui"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Link, useNavigate } from "react-router-dom"
+import { z } from "zod"
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui"
+import { useAuth } from "@/hooks/useAuth"
+
+const loginSchema = z.object({
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
 
 export function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const navigate = useNavigate()
+  const { login } = useAuth()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const onSubmit = async (values: LoginFormValues) => {
+    await login(values)
+    navigate("/dashboard")
   }
 
   return (
@@ -19,20 +41,29 @@ export function LoginPage() {
             <CardDescription>Sign in to your InsightFlow workspace to continue.</CardDescription>
           </CardHeader>
           <CardContent className="mt-6 grid gap-5">
-            <form onSubmit={handleSubmit} className="grid gap-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground" htmlFor="email">
+                <label htmlFor="email" className="text-sm font-medium text-muted-foreground">
                   Email address
                 </label>
-                <Input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="hello@company.com" />
+                <Input id="email" type="email" {...register("email")} placeholder="hello@company.com" />
+                {errors.email ? <p className="text-sm text-destructive">{errors.email.message}</p> : null}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground" htmlFor="password">
+                <label htmlFor="password" className="text-sm font-medium text-muted-foreground">
                   Password
                 </label>
-                <Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" />
+                <Input id="password" type="password" {...register("password")} placeholder="••••••••" />
+                {errors.password ? <p className="text-sm text-destructive">{errors.password.message}</p> : null}
               </div>
-              <Button type="submit">Sign in</Button>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <Link to="/forgot-password" className="text-primary underline">
+                  Forgot password?
+                </Link>
+              </div>
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? "Signing in..." : "Sign in"}
+              </Button>
             </form>
             <p className="text-sm text-muted-foreground">
               New to InsightFlow? <Link to="/register" className="text-primary underline">Create an account</Link>

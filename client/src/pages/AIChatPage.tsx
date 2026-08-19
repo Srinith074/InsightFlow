@@ -1,63 +1,270 @@
-import { useMemo, useState, type FormEvent } from "react"
-import { motion } from "framer-motion"
-import { Button, Card, CardContent, Input } from "@/components/ui"
-import type { ChatMessage } from "@/types"
+import { useEffect, useState, type FormEvent } from "react";
+import { motion } from "framer-motion";
+import {
+  Button,
+  Card,
+  CardContent,
+  Input,
+} from "@/components/ui";
 
-const initialMessages: ChatMessage[] = [
-  { id: "1", sender: "ai", message: "Welcome back! How can I help you optimize your analytics workflow today?", timestamp: "Now" },
-]
+import { fetchDatasets } from "@/services/datasets";
+import { askAI } from "@/services/chat";
+
+interface Dataset {
+  id: string;
+  name: string;
+  sheetNames: string[];
+}
+
+interface Message {
+  id: number;
+  sender: "user" | "ai";
+  message: string;
+}
 
 export function AIChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
-  const [draft, setDraft] = useState("")
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [selectedDataset, setSelectedDataset] = useState("");
+  const [selectedSheet, setSelectedSheet] = useState("");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!draft.trim()) {
-      return
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 1,
+      sender: "ai",
+      message:
+        "Hello! Upload a dataset, choose a sheet and ask me anything.",
+    },
+  ]);
+
+  useEffect(() => {
+    async function loadDatasets() {
+      try {
+        const data = await fetchDatasets();
+
+        setDatasets(data);
+
+        if (data.length > 0) {
+          setSelectedDataset(data[0].id);
+
+          if (data[0].sheetNames.length > 0) {
+            setSelectedSheet(data[0].sheetNames[0]);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    setMessages((previous) => [
-      ...previous,
-      { id: String(previous.length + 1), sender: "user", message: draft.trim(), timestamp: "Now" },
-      { id: String(previous.length + 2), sender: "ai", message: "I found a new trend in the dataset and created a summary for your next report.", timestamp: "Now" },
-    ])
-    setDraft("")
+    loadDatasets();
+  }, []);
+
+  function changeDataset(id: string) {
+    setSelectedDataset(id);
+
+    const dataset = datasets.find(
+      (d) => d.id === id
+    );
+
+    if (dataset) {
+      setSelectedSheet(
+        dataset.sheetNames[0] || ""
+      );
+    }
   }
 
-  const conversation = useMemo(() => messages.slice(-6), [messages])
+  async function handleSubmit(
+    e: FormEvent
+  ) {
+    e.preventDefault();
+
+    if (!draft.trim()) return;
+
+    if (!selectedDataset) {
+      alert("Select a dataset");
+      return;
+    }
+
+    if (!selectedSheet) {
+      alert("Select a sheet");
+      return;
+    }
+
+    const question = draft;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: "user",
+        message: question,
+      },
+    ]);
+
+    setDraft("");
+    setLoading(true);
+
+    try {
+      const answer = await askAI(
+        selectedDataset,
+        selectedSheet,
+        question
+      );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: "ai",
+          message: answer,
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 2,
+          sender: "ai",
+          message:
+            "Something went wrong.",
+        },
+      ]);
+    }
+
+    setLoading(false);
+  }
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-4">
-        <div className="flex items-center justify-between gap-4 rounded-3xl border border-border bg-card/95 p-5 shadow-sm">
+      <Card>
+        <CardContent className="space-y-6 p-6">
+
+          <h2 className="text-2xl font-bold">
+            AI Dataset Chat
+          </h2>
+
+          {/* Dataset */}
+
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">AI assistant</p>
-            <h2 className="text-2xl font-semibold text-foreground">Live chat</h2>
-            <p className="text-sm text-muted-foreground">Ask questions, generate reports, and validate datasets in a conversational flow.</p>
+            <label className="mb-2 block text-sm font-medium">
+              Dataset
+            </label>
+
+            <select
+              className="w-full rounded border p-2"
+              value={selectedDataset}
+              onChange={(e) =>
+                changeDataset(e.target.value)
+              }
+            >
+              {datasets.map((d) => (
+                <option
+                  key={d.id}
+                  value={d.id}
+                >
+                  {d.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      </div>
-      <Card className="border border-border bg-card/90 shadow-sm">
-        <CardContent className="space-y-4 p-6">
-          {conversation.map((message) => (
-            <motion.div key={message.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className={message.sender === "ai" ? "rounded-3xl bg-muted p-4 text-sm text-foreground" : "self-end rounded-3xl bg-primary/10 p-4 text-sm text-foreground"}>
-              <p className="font-medium">{message.sender === "ai" ? "InsightFlow AI" : "You"}</p>
-              <p className="mt-2 leading-7">{message.message}</p>
-              <p className="mt-3 text-xs text-muted-foreground">{message.timestamp}</p>
-            </motion.div>
-          ))}
-          <form onSubmit={handleSubmit} className="grid gap-3">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-muted-foreground" htmlFor="chat">
-                Ask a question
-              </label>
-              <Input id="chat" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Summarize last quarter's revenue trends..." />
-            </div>
-            <Button type="submit">Send message</Button>
+
+          {/* Sheet */}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Sheet
+            </label>
+
+            <select
+              className="w-full rounded border p-2"
+              value={selectedSheet}
+              onChange={(e) =>
+                setSelectedSheet(
+                  e.target.value
+                )
+              }
+            >
+              {datasets
+                .find(
+                  (d) =>
+                    d.id === selectedDataset
+                )
+                ?.sheetNames.map((sheet) => (
+                  <option
+                    key={sheet}
+                    value={sheet}
+                  >
+                    {sheet}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {/* Messages */}
+
+          <div className="space-y-4 max-h-[500px] overflow-y-auto">
+
+            {messages.map((m) => (
+              <motion.div
+                key={m.id}
+                initial={{
+                  opacity: 0,
+                  y: 8,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className={
+                  m.sender === "ai"
+                    ? "rounded-xl bg-muted p-4"
+                    : "rounded-xl bg-primary/10 p-4"
+                }
+              >
+                <b>
+                  {m.sender === "ai"
+                    ? "InsightFlow AI"
+                    : "You"}
+                </b>
+
+                <p className="mt-2 whitespace-pre-wrap">
+                  {m.message}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Input */}
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3"
+          >
+            <Input
+              value={draft}
+              onChange={(e) =>
+                setDraft(e.target.value)
+              }
+              placeholder="Ask a question..."
+            />
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full"
+            >
+              {loading
+                ? "Thinking..."
+                : "Send"}
+            </Button>
           </form>
+
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

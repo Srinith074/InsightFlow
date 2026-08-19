@@ -1,8 +1,22 @@
-import type { DatasetItem } from "@/types"
+import { api } from "@/utils/api";
 
-export const datasetItems: DatasetItem[] = [
-  { id: "ds-01", name: "Sales Signals", records: "1.4M", type: "Behavioral", status: "Live", updated: "1h ago" },
-  { id: "ds-02", name: "Market Pulse", records: "760k", type: "Time Series", status: "Reviewing", updated: "4h ago" },
-  { id: "ds-03", name: "Customer Funnel", records: "430k", type: "Transactional", status: "Live", updated: "Yesterday" },
-  { id: "ds-04", name: "Campaign Metrics", records: "98k", type: "Event", status: "Paused", updated: "2 days ago" },
-]
+export interface DatasetItem {
+  id: string;
+  name: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  rowCount: number;
+  columnCount: number;
+  headers: string[];
+  createdAt: string;
+}
+
+export async function getDatasets() {
+  const response = await api.get("/api/datasets");
+  return response.data.datasets;
+}
+
+export async function deleteDataset(id: string) {
+  await api.delete(`/api/datasets/${id}`);
+}

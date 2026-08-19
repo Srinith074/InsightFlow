@@ -29,6 +29,19 @@ export interface DatasetItem {
   updated: string
 }
 
+export interface DatasetMetadata {
+  id: string
+  name: string
+  fileName: string
+  mimeType: string
+  size: number
+  rowCount: number
+  columnCount: number
+  headers: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface ChatMessage {
   id: string
   sender: "ai" | "user"
@@ -42,4 +55,13 @@ export interface UserProfile {
   email: string
   plan: string
   joined: string
+}
+
+export interface AuthUser {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+  createdAt: string
+  updatedAt: string
 }

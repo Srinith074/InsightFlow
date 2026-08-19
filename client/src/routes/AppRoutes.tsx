@@ -4,6 +4,7 @@ import { AnalyticsPage } from "@/pages/AnalyticsPage"
 import { AIChatPage } from "@/pages/AIChatPage"
 import { DatasetsPage } from "@/pages/DatasetsPage"
 import { DashboardHome } from "@/pages/DashboardHome"
+import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage"
 import { LandingPage } from "@/pages/LandingPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { NotFoundPage } from "@/pages/NotFoundPage"
@@ -12,6 +13,7 @@ import { ReportsPage } from "@/pages/ReportsPage"
 import { RegisterPage } from "@/pages/RegisterPage"
 import { SettingsPage } from "@/pages/SettingsPage"
 import { UploadPage } from "@/pages/UploadPage"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 
 export function AppRoutes() {
   return (
@@ -19,7 +21,8 @@ export function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/dashboard" element={<DashboardLayout />}>
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
         <Route index element={<DashboardHome />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="ai-chat" element={<AIChatPage />} />
