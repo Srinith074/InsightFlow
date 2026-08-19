@@ -26,7 +26,7 @@ export function DashboardHome() {
         console.log("Loading datasets...");
 
         const response = await fetch(
-          "http://localhost:4000/api/datasets",
+          `${import.meta.env.VITE_API_URL}/api/datasets`,
           {
             credentials: "include",
           }
