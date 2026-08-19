@@ -38,6 +38,8 @@ export interface DatasetMetadata {
   rowCount: number
   columnCount: number
   headers: string[]
+  sheetNames: string[]
+  selectedSheet?: string
   createdAt: string
   updatedAt: string
 }

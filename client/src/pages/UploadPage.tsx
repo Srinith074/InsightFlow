@@ -41,7 +41,7 @@ export function UploadPage() {
         throw new Error("No file selected");
       }
 
-      return uploadDataset(files[0]);
+      return uploadDataset(files);
     },
 
     onSuccess: () => {

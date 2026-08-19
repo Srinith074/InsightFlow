@@ -9,12 +9,7 @@ import {
 
 import { fetchDatasets } from "@/services/datasets";
 import { askAI } from "@/services/chat";
-
-interface Dataset {
-  id: string;
-  name: string;
-  sheetNames: string[];
-}
+import type { DatasetMetadata } from "@/types";
 
 interface Message {
   id: number;
@@ -23,7 +18,7 @@ interface Message {
 }
 
 export function AIChatPage() {
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [selectedDataset, setSelectedDataset] = useState("");
   const [selectedSheet, setSelectedSheet] = useState("");
 

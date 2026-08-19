@@ -1,7 +1,7 @@
-import { revenueByMonth } from "./revenue";
+import { revenueByMonth } from "./revenue.js";
 
 export function compareRevenue(
-  rows: any[],
+  rows: Record<string, unknown>[],
   month1: string,
   month2: string
 ) {

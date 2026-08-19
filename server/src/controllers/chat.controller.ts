@@ -64,10 +64,13 @@ export async function chat(
       });
     }
 
-    const rows = XLSX.utils.sheet_to_json(selectedSheet, {
-      defval: "",
-      raw: false,
-    });
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+      selectedSheet,
+      {
+        defval: "",
+        raw: false,
+      }
+    );
 
     console.log("Selected Sheet:", sheetName);
     console.log("Rows:", rows.length);

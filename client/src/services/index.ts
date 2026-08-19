@@ -1,4 +1,4 @@
 export * from "./dashboard"
-export * from "./files"
 export * from "./reports"
 export * from "./datasets"
+export { getDatasets, deleteDataset } from "./files"

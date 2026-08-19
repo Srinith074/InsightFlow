@@ -13,3 +13,8 @@ server/dist/
 server/uploads/
 
 
+
+# Environment variables
+.env
+.env.*
+!.env.example

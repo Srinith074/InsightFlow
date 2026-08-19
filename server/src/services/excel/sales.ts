@@ -1,7 +1,7 @@
-import { filterByMonth } from "./date";
+import { filterByMonth } from "./date.js";
 
 export function totalSales(
-  rows: any[],
+  rows: Record<string, unknown>[],
   month: string
 ) {
   const filtered = filterByMonth(rows, month);
