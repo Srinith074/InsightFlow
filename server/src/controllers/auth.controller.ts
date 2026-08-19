@@ -6,9 +6,10 @@ import { comparePasswords, createUser, findUserByEmail } from "../services/auth.
 
 const cookieOptions = {
   httpOnly: true,
-  secure: false,
-  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "none" as const,
   maxAge: 1000 * 60 * 60 * 24,
+  path: "/",
 }
 
 function createAuthResponse(res: Response, user: { id: string; name: string; email: string; avatar?: string; createdAt: Date; updatedAt: Date }) {
@@ -76,6 +77,7 @@ export async function logout(_req: Request, res: Response) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "none",
+    path: "/",
   })
 
   return res.json({ message: "Logged out successfully" })
