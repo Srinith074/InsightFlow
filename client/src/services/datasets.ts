@@ -18,7 +18,7 @@ export async function uploadDataset(files: File[]): Promise<DatasetMetadata> {
   });
 
   const response = await api.post<{ dataset: DatasetMetadata }>(
-    "/api/datasets/upload",
+    "/api/datasets",
     formData,
     {
       headers: {
