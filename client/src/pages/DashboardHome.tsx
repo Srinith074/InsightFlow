@@ -3,6 +3,7 @@ import {
   fetchDashboard,
   type DashboardData,
 } from "@/services/dashboard";
+import { fetchDatasets } from "@/services/datasets";
 
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { OverviewCards } from "@/components/dashboard/OverviewCards";
@@ -25,33 +26,17 @@ export function DashboardHome() {
       try {
         console.log("Loading datasets...");
 
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/datasets`,
-          {
-            credentials: "include",
-          }
-        );
-
-        const result = await response.json();
-
-        console.log("API Response:", result);
-
-        // Handle different response formats
-        const datasets = Array.isArray(result)
-          ? result
-          : result.datasets || result.data || [];
+        const datasets = await fetchDatasets();
 
         console.log("Datasets:", datasets);
 
-        if (datasets.length === 0) {
+        if (!datasets || datasets.length === 0) {
           console.warn("No datasets found.");
           setLoading(false);
           return;
         }
 
-        const datasetId =
-          datasets[0].id ||
-          datasets[0]._id;
+        const datasetId = datasets[0].id;
 
         console.log("Using Dataset:", datasetId);
 

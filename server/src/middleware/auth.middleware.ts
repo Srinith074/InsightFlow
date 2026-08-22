@@ -4,9 +4,10 @@ import User from "../models/User.js"
 import { verifyToken } from "../utils/token.util.js"
 
 export async function authMiddleware(req: RequestWithUser, res: Response, next: NextFunction) {
-    const token = req.cookies?.token
-    console.log("Cookies:", req.cookies);
-    console.log("Token:", req.cookies?.token);
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : undefined;
+  const token = req.cookies?.token || bearerToken;
+
   if (!token) {
     return res.status(401).json({ message: "Authentication required" })
   }

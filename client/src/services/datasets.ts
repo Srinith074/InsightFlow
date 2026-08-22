@@ -13,18 +13,13 @@ export async function fetchDatasets(): Promise<DatasetMetadata[]> {
 export async function uploadDataset(files: File[]): Promise<DatasetMetadata> {
   const formData = new FormData();
 
-  files.forEach((file) => {
-    formData.append("files", file);
-  });
+  if (files.length > 0) {
+    formData.append("file", files[0]);
+  }
 
   const response = await api.post<{ dataset: DatasetMetadata }>(
     "/api/datasets",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
+    formData
   );
 
   return response.data.dataset;

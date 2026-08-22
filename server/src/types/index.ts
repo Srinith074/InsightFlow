@@ -13,4 +13,5 @@ export interface AuthUser {
 export interface RequestWithUser extends Request {
   user?: AuthUser
   file?: Express.Multer.File
+  files?: { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[]
 }

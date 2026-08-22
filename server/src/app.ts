@@ -10,11 +10,27 @@ import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 const clientUrl = process.env.CLIENT_URL ?? "http://localhost:5173";
+const allowedOrigins = clientUrl
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
 
 app.use(
   cors({
-    origin: clientUrl,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      if (
+        allowedOrigins.includes(normalizedOrigin) ||
+        process.env.NODE_ENV !== "production"
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
   })
 );

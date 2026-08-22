@@ -4,10 +4,12 @@ import type { RequestWithUser } from "../types/index.js"
 import { createToken } from "../utils/token.util.js"
 import { comparePasswords, createUser, findUserByEmail } from "../services/auth.service.js"
 
-const cookieOptions = {
+const isProduction = process.env.NODE_ENV === "production"
+
+const cookieOptions: import("express").CookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "none" as const,
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   maxAge: 1000 * 60 * 60 * 24,
   path: "/",
 }
@@ -15,7 +17,7 @@ const cookieOptions = {
 function createAuthResponse(res: Response, user: { id: string; name: string; email: string; avatar?: string; createdAt: Date; updatedAt: Date }) {
   const token = createToken({ id: user.id })
   res.cookie("token", token, cookieOptions)
-  return res.json({ user })
+  return res.json({ user, token })
 }
 
 export async function register(req: Request, res: Response) {
@@ -75,8 +77,8 @@ export async function login(req: Request, res: Response) {
 export async function logout(_req: Request, res: Response) {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     path: "/",
   })
 

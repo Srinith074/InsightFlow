@@ -13,7 +13,14 @@ export async function uploadDataset(
   req: RequestWithUser,
   res: Response
 ) {
-  const file = req.file;
+  let file = req.file;
+  if (!file && req.files) {
+    if (Array.isArray(req.files)) {
+      file = req.files[0];
+    } else {
+      file = req.files["file"]?.[0] || req.files["files"]?.[0];
+    }
+  }
   const user = req.user;
 
   if (!user) {

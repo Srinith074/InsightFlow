@@ -29,19 +29,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (credentials: { email: string; password: string }) => {
     setError(null)
-    const response = await api.post("/api/auth/login", credentials)
+    const response = await api.post<{ user: AuthUser; token?: string }>("/api/auth/login", credentials)
+    if (response.data.token && typeof window !== "undefined") {
+      localStorage.setItem("token", response.data.token)
+    }
     setUser(response.data.user)
   }
 
   const register = async (credentials: { name: string; email: string; password: string }) => {
     setError(null)
-    const response = await api.post("/api/auth/register", credentials)
+    const response = await api.post<{ user: AuthUser; token?: string }>("/api/auth/register", credentials)
+    if (response.data.token && typeof window !== "undefined") {
+      localStorage.setItem("token", response.data.token)
+    }
     setUser(response.data.user)
   }
 
   const logout = async () => {
-    await api.post("/api/auth/logout")
-    setUser(null)
+    try {
+      await api.post("/api/auth/logout")
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token")
+      }
+      setUser(null)
+    }
   }
 
   const value = useMemo(

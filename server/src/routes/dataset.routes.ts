@@ -19,7 +19,7 @@ const upload = multer({
 router.post(
   "/",
   authMiddleware,
-  upload.single("file"),
+  upload.fields([{ name: "file", maxCount: 1 }, { name: "files", maxCount: 1 }]),
   uploadDataset
 );
 
