@@ -33,7 +33,10 @@ import {
   UploadCloud,
 } from "lucide-react";
 
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+
 export function DashboardHome() {
+  useDocumentTitle("InsightFlow — Overview");
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
   const [selectedSheet, setSelectedSheet] = useState<string>("");

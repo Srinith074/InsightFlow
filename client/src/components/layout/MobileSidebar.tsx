@@ -14,7 +14,14 @@ export function MobileSidebar() {
       <SheetContent side="left" className="w-[calc(100vw-2rem)] sm:w-[320px]">
         <SheetHeader>
           <div className="flex items-center justify-between gap-3">
-            <SheetTitle>InsightFlow</SheetTitle>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/branding/app-icon.png"
+                alt="InsightFlow"
+                className="size-7 rounded-lg shadow-xs object-contain"
+              />
+              <SheetTitle className="text-base font-bold">InsightFlow</SheetTitle>
+            </div>
             <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(false)}>
               <span className="sr-only">Close menu</span>
               <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">

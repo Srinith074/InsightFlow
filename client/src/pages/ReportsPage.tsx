@@ -41,8 +41,10 @@ import {
   type SavedReport,
 } from "@/services/reports";
 import type { DatasetMetadata } from "@/types";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function ReportsPage() {
+  useDocumentTitle("InsightFlow — Reports");
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [selectedDatasetFilter, setSelectedDatasetFilter] = useState<string>("all");

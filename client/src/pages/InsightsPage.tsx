@@ -31,8 +31,10 @@ import {
   type SavedInsight,
 } from "@/services/insights";
 import type { DatasetMetadata } from "@/types";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function InsightsPage() {
+  useDocumentTitle("InsightFlow — Saved Insights");
   const [insights, setInsights] = useState<SavedInsight[]>([]);
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [selectedDatasetFilter, setSelectedDatasetFilter] = useState<string>("all");

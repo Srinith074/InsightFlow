@@ -63,7 +63,10 @@ const COLORS = [
   "#f97316",
 ];
 
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+
 export function AnalyticsPage() {
+  useDocumentTitle("InsightFlow — Analytics");
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
   const [selectedSheet, setSelectedSheet] = useState<string>("");

@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom"
 import { AlertTriangle } from "lucide-react"
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
 export function NotFoundPage() {
+  useDocumentTitle("InsightFlow — Page Not Found")
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
       <Card className="w-full max-w-2xl border border-border bg-card/95 shadow-lg">

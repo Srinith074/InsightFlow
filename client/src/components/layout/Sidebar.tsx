@@ -6,9 +6,23 @@ import { Separator } from "@/components/ui"
 export function Sidebar() {
   return (
     <aside className="hidden h-screen w-72 shrink-0 flex-col gap-6 border-r border-border bg-background p-6 lg:flex">
-      <div className="flex flex-col gap-2">
-        <div className="text-2xl font-bold tracking-tight text-foreground">InsightFlow</div>
-        <p className="max-w-[18rem] text-xs leading-5 text-muted-foreground">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <img
+            src="/branding/app-icon.png"
+            alt="InsightFlow"
+            className="size-9 rounded-xl shadow-md shrink-0 object-contain"
+          />
+          <div className="flex flex-col">
+            <span className="text-lg font-bold tracking-tight text-foreground leading-tight">
+              InsightFlow
+            </span>
+            <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+              AI Analytics
+            </span>
+          </div>
+        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
           Deterministic analytics & AI-powered intelligence for Excel and CSV datasets.
         </p>
       </div>

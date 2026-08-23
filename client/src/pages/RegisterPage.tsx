@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui"
 import { useAuth } from "@/hooks/useAuth"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -14,6 +15,7 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 export function RegisterPage() {
+  useDocumentTitle("InsightFlow — Create Account")
   const navigate = useNavigate()
   const { register: authRegister } = useAuth()
   const {
@@ -38,8 +40,23 @@ export function RegisterPage() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen max-w-2xl items-center px-4 py-16 sm:px-6 lg:px-8">
         <Card className="w-full border border-border bg-card/95 p-8 shadow-lg">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-3xl">Create your account</CardTitle>
+          <div className="flex flex-col items-center text-center mb-6">
+            <Link to="/">
+              <img
+                src="/branding/app-icon.png"
+                alt="InsightFlow"
+                className="size-16 rounded-2xl shadow-lg mb-3 object-contain hover:scale-105 transition duration-200"
+              />
+            </Link>
+            <div className="text-xl font-bold tracking-tight text-foreground">
+              InsightFlow
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              100% Free AI-Powered Analytics Platform
+            </p>
+          </div>
+          <CardHeader className="space-y-2 p-0 text-center sm:text-left">
+            <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
             <CardDescription>Join the modern analytics platform built for teams and AI workflows.</CardDescription>
           </CardHeader>
           <CardContent className="mt-6 grid gap-5">

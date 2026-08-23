@@ -21,8 +21,10 @@ import {
 
 import { fetchDatasets, uploadDataset } from "@/services/datasets";
 import type { DatasetMetadata } from "@/types";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function UploadPage() {
+  useDocumentTitle("InsightFlow — Upload Dataset");
   const queryClient = useQueryClient();
 
   const {

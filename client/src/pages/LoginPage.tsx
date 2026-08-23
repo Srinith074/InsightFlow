@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { z } from "zod"
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui"
 import { useAuth } from "@/hooks/useAuth"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -13,6 +14,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export function LoginPage() {
+  useDocumentTitle("InsightFlow — Sign In")
   const navigate = useNavigate()
   const { login } = useAuth()
   const {
@@ -36,8 +38,23 @@ export function LoginPage() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen max-w-2xl items-center px-4 py-16 sm:px-6 lg:px-8">
         <Card className="w-full border border-border bg-card/95 p-8 shadow-lg">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-3xl">Welcome back</CardTitle>
+          <div className="flex flex-col items-center text-center mb-6">
+            <Link to="/">
+              <img
+                src="/branding/app-icon.png"
+                alt="InsightFlow"
+                className="size-16 rounded-2xl shadow-lg mb-3 object-contain hover:scale-105 transition duration-200"
+              />
+            </Link>
+            <div className="text-xl font-bold tracking-tight text-foreground">
+              InsightFlow
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Deterministic Analytics & AI Intelligence
+            </p>
+          </div>
+          <CardHeader className="space-y-2 p-0 text-center sm:text-left">
+            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
             <CardDescription>Sign in to your InsightFlow workspace to continue.</CardDescription>
           </CardHeader>
           <CardContent className="mt-6 grid gap-5">

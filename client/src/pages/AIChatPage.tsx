@@ -46,7 +46,10 @@ const SUGGESTED_PROMPTS = [
   "Show production in May",
 ];
 
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+
 export function AIChatPage() {
+  useDocumentTitle("InsightFlow — AI Analyst");
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
   const [selectedSheet, setSelectedSheet] = useState<string>("");

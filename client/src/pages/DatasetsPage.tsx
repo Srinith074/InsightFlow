@@ -43,8 +43,10 @@ import {
   type DatasetSchemaResponse,
 } from "@/services/datasets";
 import type { DatasetMetadata } from "@/types";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export function DatasetsPage() {
+  useDocumentTitle("InsightFlow — Datasets");
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

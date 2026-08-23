@@ -27,6 +27,14 @@ export function TopNavbar() {
             <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
           </svg>
         </Button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <img
+            src="/branding/app-icon.png"
+            alt="InsightFlow"
+            className="size-7 rounded-lg shadow-xs object-contain"
+          />
+          <span className="font-bold text-sm text-foreground">InsightFlow</span>
+        </div>
         <div
           className="hidden sm:flex items-center gap-2.5 rounded-2xl border border-border bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground select-none opacity-80 cursor-default"
           title="Global search across datasets (coming soon)"

@@ -3,14 +3,21 @@ import { motion } from "framer-motion"
 import { ArrowRight, Cpu, Layers, Sparkles } from "lucide-react"
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui"
 import { brandName, productTagline } from "@/assets"
+import { useDocumentTitle } from "@/hooks/useDocumentTitle"
 
 export function LandingPage() {
+  useDocumentTitle("InsightFlow — Modern AI Analytics Platform")
   return (
     <div className="min-h-screen bg-background text-foreground">
       <main className="mx-auto grid min-h-screen max-w-7xl gap-16 px-4 py-10 sm:px-6 lg:px-8">
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex items-center gap-3">
+              <img
+                src="/branding/app-icon.png"
+                alt="InsightFlow"
+                className="size-10 rounded-xl shadow-md object-contain"
+              />
               <p className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
                 <Sparkles className="size-4" /> 100% Free AI Analytics Platform
               </p>

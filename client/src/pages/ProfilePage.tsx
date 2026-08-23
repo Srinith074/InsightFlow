@@ -27,7 +27,10 @@ import {
   User as UserIcon,
 } from "lucide-react";
 
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+
 export function ProfilePage() {
+  useDocumentTitle("InsightFlow — Profile");
   const { user, logout } = useAuth();
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
