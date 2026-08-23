@@ -92,3 +92,76 @@ export async function me(req: RequestWithUser, res: Response) {
 
   return res.json({ user: req.user })
 }
+
+export async function getProfileStats(req: RequestWithUser, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const { default: Dataset } = await import("../models/Dataset.js");
+    const { default: Insight } = await import("../models/Insight.js");
+    const { default: Report } = await import("../models/Report.js");
+
+    const userId = req.user.id;
+
+    const datasets = await Dataset.find({ owner: userId }).select("rowCount").lean();
+    const datasetsCount = datasets.length;
+    const totalRowsManaged = datasets.reduce((sum, d) => sum + (d.rowCount || 0), 0);
+
+    const savedInsightsCount = await Insight.countDocuments({ owner: userId });
+    const reportsCount = await Report.countDocuments({ owner: userId });
+
+    return res.json({
+      user: req.user,
+      stats: {
+        datasetsCount,
+        totalRowsManaged,
+        savedInsightsCount,
+        reportsCount,
+      },
+    });
+  } catch (error) {
+    console.error("Profile stats error:", error);
+    return res.status(500).json({ message: "Failed to load profile statistics" });
+  }
+}
+
+export async function changePassword(req: RequestWithUser, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current and new passwords are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    }
+
+    const user = await findUserByEmail(req.user.email);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await comparePasswords(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect current password" });
+    }
+
+    const { updateUserPassword } = await import("../services/auth.service.js");
+    await updateUserPassword(user._id.toString(), newPassword);
+
+    return res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ message: "Failed to update password" });
+  }
+}

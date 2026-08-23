@@ -11,24 +11,30 @@ export function OverviewCards({ dashboard }: Props) {
     {
       label: "Total Revenue",
       value: `₹${dashboard.totalRevenue.toLocaleString("en-IN")}`,
-      change: "Live",
+      change: dashboard.growthRate !== null && dashboard.growthRate !== undefined
+        ? `${dashboard.growthRate >= 0 ? "+" : ""}${dashboard.growthRate}% MoM`
+        : "Live calculation",
     },
     {
-      label: "Average Revenue",
-      value: `₹${Math.round(
-        dashboard.averageRevenue
-      ).toLocaleString("en-IN")}`,
-      change: "Live",
+      label: "Average Value / Order",
+      value: `₹${Math.round(dashboard.averageRevenue).toLocaleString("en-IN")}`,
+      change: `across ${dashboard.totalRows} records`,
     },
     {
-      label: "Top Product",
+      label: "Top Product Driver",
       value: dashboard.topProduct,
-      change: `${dashboard.topProductSales.toLocaleString("en-IN")}`,
+      change: dashboard.topProductShare
+        ? `${dashboard.topProductShare}% share (₹${Math.round(dashboard.topProductSales).toLocaleString("en-IN")})`
+        : `₹${Math.round(dashboard.topProductSales).toLocaleString("en-IN")}`,
     },
     {
-      label: "Total Records",
-      value: dashboard.totalRows.toString(),
-      change: "Dataset",
+      label: dashboard.bestPeriod ? "Peak Performing Period" : "Volume / Records",
+      value: dashboard.bestPeriod
+        ? dashboard.bestPeriod.period
+        : `${dashboard.totalRows} entries`,
+      change: dashboard.bestPeriod
+        ? `₹${Math.round(dashboard.bestPeriod.revenue).toLocaleString("en-IN")}`
+        : `${dashboard.totalQuantity ? `${dashboard.totalQuantity} units` : "Processed"}`,
     },
   ];
 

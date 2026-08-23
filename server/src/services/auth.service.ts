@@ -15,6 +15,15 @@ export async function findUserByEmail(email: string) {
   return User.findOne({ email }).exec()
 }
 
+export async function hashPassword(password: string) {
+  return bcrypt.hash(password, 10);
+}
+
 export async function comparePasswords(password: string, hashedPassword: string) {
   return bcrypt.compare(password, hashedPassword)
+}
+
+export async function updateUserPassword(userId: string, newPassword: string) {
+  const hashedPassword = await hashPassword(newPassword);
+  return User.findByIdAndUpdate(userId, { password: hashedPassword }).exec();
 }

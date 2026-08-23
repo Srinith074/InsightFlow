@@ -11,7 +11,9 @@ import {
 import {
   uploadFileToStorage,
   deleteFileFromStorage,
+  getFileBufferFromStorage,
 } from "../services/storage.service.js";
+import { detectDatasetSchema } from "../services/schema.service.js";
 import type { RequestWithUser } from "../types/index.js";
 
 export async function uploadDataset(
@@ -169,6 +171,140 @@ export async function getDatasets(
       updatedAt: dataset.updatedAt,
     })),
   });
+}
+
+export async function getDatasetPreview(
+  req: RequestWithUser,
+  res: Response
+) {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const { id } = req.params;
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid dataset ID" });
+    }
+
+    const dataset = await Dataset.findById(id);
+    if (!dataset) {
+      return res.status(404).json({ message: "Dataset not found" });
+    }
+
+    if (String(dataset.owner) !== user.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const buffer = await getFileBufferFromStorage(dataset);
+    const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
+    const availableSheets = workbook.SheetNames || [];
+
+    const sheetNameQuery = req.query.sheetName ? decodeURIComponent(String(req.query.sheetName)) : "";
+    const requestedSheet = sheetNameQuery && workbook.Sheets[sheetNameQuery]
+      ? sheetNameQuery
+      : availableSheets[0] || "";
+
+    if (!requestedSheet || !workbook.Sheets[requestedSheet]) {
+      return res.json({
+        rows: [],
+        totalRows: 0,
+        page: 1,
+        limit: 50,
+        totalPages: 0,
+        headers: [],
+        sheetName: "",
+        availableSheets,
+      });
+    }
+
+    const sheet = workbook.Sheets[requestedSheet];
+    const allRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+    const headers = Object.keys(allRows[0] || {});
+
+    const page = Math.max(1, parseInt(String(req.query.page || "1"), 10) || 1);
+    const limit = Math.min(100, Math.max(10, parseInt(String(req.query.limit || "50"), 10) || 50));
+    const totalRows = allRows.length;
+    const totalPages = Math.ceil(totalRows / limit);
+    const start = (page - 1) * limit;
+    const rows = allRows.slice(start, start + limit);
+
+    return res.json({
+      rows,
+      totalRows,
+      page,
+      limit,
+      totalPages,
+      headers,
+      sheetName: requestedSheet,
+      availableSheets,
+    });
+  } catch (error) {
+    console.error("Preview error:", error);
+    return res.status(500).json({ message: "Failed to load dataset preview" });
+  }
+}
+
+export async function getDatasetSchema(
+  req: RequestWithUser,
+  res: Response
+) {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const { id } = req.params;
+    if (!id || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid dataset ID" });
+    }
+
+    const dataset = await Dataset.findById(id);
+    if (!dataset) {
+      return res.status(404).json({ message: "Dataset not found" });
+    }
+
+    if (String(dataset.owner) !== user.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const buffer = await getFileBufferFromStorage(dataset);
+    const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
+    const availableSheets = workbook.SheetNames || [];
+
+    const sheetNameQuery = req.query.sheetName ? decodeURIComponent(String(req.query.sheetName)) : "";
+    const requestedSheet = sheetNameQuery && workbook.Sheets[sheetNameQuery]
+      ? sheetNameQuery
+      : availableSheets[0] || "";
+
+    if (!requestedSheet || !workbook.Sheets[requestedSheet]) {
+      return res.status(404).json({ message: "Sheet not found", availableSheets });
+    }
+
+    const sheet = workbook.Sheets[requestedSheet];
+    const allRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+    const schemaResult = detectDatasetSchema(allRows);
+
+    return res.json({
+      schema: schemaResult,
+      sheetName: requestedSheet,
+      availableSheets,
+      dataset: {
+        id: dataset._id.toString(),
+        name: dataset.name,
+        fileName: dataset.fileName,
+        size: dataset.size,
+        rowCount: dataset.rowCount,
+        columnCount: dataset.columnCount,
+        createdAt: dataset.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Schema detection error:", error);
+    return res.status(500).json({ message: "Failed to detect dataset schema" });
+  }
 }
 
 export async function deleteDataset(

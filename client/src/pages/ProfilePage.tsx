@@ -10,12 +10,17 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Input,
 } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
-import { fetchDatasets } from "@/services/datasets";
+import { fetchProfileStats, changeUserPassword, type ProfileStats } from "@/services/auth";
 import {
+  Bookmark,
   Calendar,
   Database,
+  FileText,
+  KeyRound,
+  Layers,
   LogOut,
   Mail,
   ShieldCheck,
@@ -24,20 +29,69 @@ import {
 
 export function ProfilePage() {
   const { user, logout } = useAuth();
-  const [datasetCount, setDatasetCount] = useState<number | null>(null);
+  const [stats, setStats] = useState<ProfileStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  // Change Password State
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordStatus, setPasswordStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     async function loadStats() {
       try {
-        const datasets = await fetchDatasets();
-        setDatasetCount(datasets.length);
+        setLoadingStats(true);
+        const data = await fetchProfileStats();
+        setStats(data.stats);
       } catch (err) {
-        console.error("Failed to load profile dataset stats:", err);
+        console.error("Failed to load profile statistics:", err);
+      } finally {
+        setLoadingStats(false);
       }
     }
 
     loadStats();
   }, []);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordStatus({ type: null, message: "" });
+
+    if (!currentPassword || !newPassword) {
+      setPasswordStatus({ type: "error", message: "Please fill in all password fields." });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordStatus({ type: "error", message: "New password must be at least 6 characters long." });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus({ type: "error", message: "New passwords do not match." });
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      const res = await changeUserPassword(currentPassword, newPassword);
+      setPasswordStatus({ type: "success", message: res.message || "Password updated successfully!" });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msg = (err as any)?.response?.data?.message || "Failed to update password. Check current password.";
+      setPasswordStatus({ type: "error", message: msg });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString(undefined, {
@@ -63,9 +117,14 @@ export function ProfilePage() {
               )}
             </Avatar>
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground font-semibold">
-                User Profile
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground font-semibold">
+                  User Account
+                </p>
+                <Badge variant="default" className="text-[10px] bg-emerald-600 hover:bg-emerald-600">
+                  100% Free Full Access
+                </Badge>
+              </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                 {user?.name ?? "User"}
               </h1>
@@ -83,15 +142,71 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* Account Details & Workspace Stats */}
+      {/* Real Workspace Statistics Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Indexed Datasets
+            </p>
+            <Database className="size-4 text-primary" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-foreground">
+            {loadingStats ? "..." : stats?.datasetsCount ?? 0}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Active workbooks</p>
+        </Card>
+
+        <Card className="border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Total Records Managed
+            </p>
+            <Layers className="size-4 text-primary" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-foreground">
+            {loadingStats ? "..." : (stats?.totalRowsManaged ?? 0).toLocaleString("en-IN")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Rows across spreadsheets</p>
+        </Card>
+
+        <Card className="border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Saved Insights
+            </p>
+            <Bookmark className="size-4 text-primary" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-foreground">
+            {loadingStats ? "..." : stats?.savedInsightsCount ?? 0}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Curated discoveries</p>
+        </Card>
+
+        <Card className="border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Generated Reports
+            </p>
+            <FileText className="size-4 text-primary" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-foreground">
+            {loadingStats ? "..." : stats?.reportsCount ?? 0}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">Strategic exports</p>
+        </Card>
+      </div>
+
+      {/* Account Details & Security */}
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Account Details */}
         <Card className="border border-border bg-card/90 shadow-sm">
           <CardHeader className="space-y-1 p-6">
             <div className="flex items-center gap-2 text-primary">
               <UserIcon className="size-5" />
-              <CardTitle className="text-base font-semibold">Account Details</CardTitle>
+              <CardTitle className="text-base font-semibold">Account Identity</CardTitle>
             </div>
-            <CardDescription>Your authenticated account credentials and timestamps</CardDescription>
+            <CardDescription>Your authenticated account credentials and security status</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 border-t border-border p-6">
             <div className="space-y-1">
@@ -112,38 +227,86 @@ export function ProfilePage() {
                 <p className="text-sm font-semibold text-foreground">{memberSince}</p>
               </div>
             </div>
+            <div className="rounded-2xl border border-border bg-muted/40 p-3 space-y-1">
+              <p className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                <ShieldCheck className="size-4 text-primary" />
+                Session Security
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                HTTP-only secure cookie session active. Zero sensitive tokens exposed to local storage.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
+        {/* Change Password Form */}
         <Card className="border border-border bg-card/90 shadow-sm">
           <CardHeader className="space-y-1 p-6">
             <div className="flex items-center gap-2 text-primary">
-              <ShieldCheck className="size-5" />
-              <CardTitle className="text-base font-semibold">Workspace Security & Data</CardTitle>
+              <KeyRound className="size-5" />
+              <CardTitle className="text-base font-semibold">Update Password</CardTitle>
             </div>
-            <CardDescription>Connected data assets and session status</CardDescription>
+            <CardDescription>Securely update your account login credentials</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 border-t border-border p-6">
-            <div className="rounded-2xl bg-muted/60 p-4">
-              <p className="text-xs font-medium text-muted-foreground">Indexed Datasets</p>
-              <div className="mt-1 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Database className="size-4 text-primary" />
-                  <p className="text-lg font-bold text-foreground">
-                    {datasetCount !== null ? `${datasetCount} active` : "Loading..."}
-                  </p>
+          <CardContent className="border-t border-border p-6">
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              {passwordStatus.message && (
+                <div
+                  className={`rounded-xl p-3 text-xs ${
+                    passwordStatus.type === "success"
+                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                      : "bg-destructive/10 text-destructive border border-destructive/20"
+                  }`}
+                >
+                  {passwordStatus.message}
                 </div>
-                <Badge variant="secondary">Connected</Badge>
-              </div>
-            </div>
+              )}
 
-            <div className="rounded-2xl bg-muted/60 p-4">
-              <p className="text-xs font-medium text-muted-foreground">Session Security</p>
-              <div className="mt-1 flex items-center justify-between">
-                <p className="text-sm font-medium text-foreground">Secure HTTP-only Session</p>
-                <Badge variant="secondary">Active</Badge>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">Current Password</label>
+                <Input
+                  type="password"
+                  placeholder="Enter current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="h-9 text-xs rounded-xl"
+                  required
+                />
               </div>
-            </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">New Password</label>
+                <Input
+                  type="password"
+                  placeholder="At least 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="h-9 text-xs rounded-xl"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">Confirm New Password</label>
+                <Input
+                  type="password"
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="h-9 text-xs rounded-xl"
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                size="sm"
+                disabled={changingPassword}
+                className="w-full text-xs inline-flex items-center justify-center gap-1.5"
+              >
+                {changingPassword ? "Updating..." : "Update Password"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>

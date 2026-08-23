@@ -5,6 +5,8 @@ import {
   type DashboardData,
 } from "@/services/dashboard";
 import { fetchDatasets } from "@/services/datasets";
+import { fetchInsights, createSavedInsight, type SavedInsight } from "@/services/insights";
+import { fetchReports, type SavedReport } from "@/services/reports";
 import type { DatasetMetadata } from "@/types";
 
 import { SectionHeader } from "@/components/common/SectionHeader";
@@ -19,41 +21,60 @@ import {
   CardTitle,
   Badge,
 } from "@/components/ui";
-import { BarChart3, Database, FileSpreadsheet, Sparkles, UploadCloud } from "lucide-react";
+import {
+  BarChart3,
+  Bookmark,
+  BookmarkPlus,
+  Check,
+  Database,
+  FileSpreadsheet,
+  FileText,
+  Sparkles,
+  UploadCloud,
+} from "lucide-react";
 
 export function DashboardHome() {
   const [datasets, setDatasets] = useState<DatasetMetadata[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState<string>("");
   const [selectedSheet, setSelectedSheet] = useState<string>("");
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [recentInsights, setRecentInsights] = useState<SavedInsight[]>([]);
+  const [recentReports, setRecentReports] = useState<SavedReport[]>([]);
   const [loadingDatasets, setLoadingDatasets] = useState(true);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
+  const [savedBulletIndexes, setSavedBulletIndexes] = useState<Set<number>>(new Set());
 
   const selectedDataset = datasets.find((d) => d.id === selectedDatasetId);
   const sheetNames = selectedDataset?.sheetNames ?? [];
 
-  // Load datasets on mount
+  // Load datasets, recent insights & reports on mount
   useEffect(() => {
-    async function loadDatasets() {
+    async function loadInitialData() {
       try {
         setLoadingDatasets(true);
-        const data = await fetchDatasets();
-        setDatasets(data);
+        const [datasetsData, insightsData, reportsData] = await Promise.all([
+          fetchDatasets(),
+          fetchInsights().catch(() => []),
+          fetchReports().catch(() => []),
+        ]);
+        setDatasets(datasetsData);
+        setRecentInsights(insightsData.slice(0, 3));
+        setRecentReports(reportsData.slice(0, 3));
 
-        if (data.length > 0) {
-          const first = data[0];
+        if (datasetsData.length > 0) {
+          const first = datasetsData[0];
           setSelectedDatasetId(first.id);
           const firstSheet = first.sheetNames?.[0] || first.selectedSheet || "";
           setSelectedSheet(firstSheet);
         }
       } catch (error) {
-        console.error("Failed to load datasets:", error);
+        console.error("Failed to load dashboard initial data:", error);
       } finally {
         setLoadingDatasets(false);
       }
     }
 
-    loadDatasets();
+    loadInitialData();
   }, []);
 
   // When dataset selection changes, update sheet selection
@@ -62,6 +83,7 @@ export function DashboardHome() {
     const dataset = datasets.find((d) => d.id === id);
     const firstSheet = dataset?.sheetNames?.[0] || dataset?.selectedSheet || "";
     setSelectedSheet(firstSheet);
+    setSavedBulletIndexes(new Set());
   };
 
   // Load dashboard data when dataset or sheet changes
@@ -87,10 +109,30 @@ export function DashboardHome() {
     loadDashboardData();
   }, [selectedDatasetId, selectedSheet]);
 
+  const handleSaveInsight = async (insightText: string, idx: number) => {
+    if (!selectedDataset) return;
+    try {
+      await createSavedInsight({
+        datasetId: selectedDataset.id,
+        datasetName: selectedDataset.name,
+        sheetName: dashboard?.sheetName || selectedSheet || "Sheet1",
+        title: `Key Discovery: ${insightText.slice(0, 45)}...`,
+        content: insightText,
+        category: "revenue",
+      });
+      setSavedBulletIndexes((prev) => new Set([...prev, idx]));
+      // Refresh recent insights
+      const updated = await fetchInsights();
+      setRecentInsights(updated.slice(0, 3));
+    } catch (error) {
+      console.error("Failed to save insight:", error);
+    }
+  };
+
   if (loadingDatasets) {
     return (
       <div className="flex h-96 items-center justify-center text-muted-foreground">
-        Loading analytics workspace...
+        Loading executive dashboard...
       </div>
     );
   }
@@ -100,7 +142,7 @@ export function DashboardHome() {
       <div className="grid gap-6">
         <SectionHeader
           title="Overview"
-          description="Your analytics workspace for every dataset, insight, and AI conversation."
+          description="Your executive dashboard for every dataset, business insight, and AI conversation."
         />
 
         <Card className="border-dashed border-border bg-card/50 p-12 text-center">
@@ -111,7 +153,7 @@ export function DashboardHome() {
             <div className="space-y-1">
               <h3 className="text-xl font-semibold text-foreground">No datasets uploaded yet</h3>
               <p className="max-w-md text-sm text-muted-foreground">
-                Upload your first Excel (.xlsx, .xls) or CSV dataset to unlock live deterministic KPIs, revenue trends, and AI analysis.
+                Upload your first Excel (.xlsx, .xls) or CSV dataset to unlock live deterministic KPIs, executive trends, and AI analysis.
               </p>
             </div>
             <Link to="/dashboard/upload">
@@ -140,7 +182,7 @@ export function DashboardHome() {
     <div className="grid gap-6">
       <SectionHeader
         title="Overview"
-        description="Live performance, revenue trends, and product intelligence calculated directly from your datasets."
+        description="Executive business summary, revenue trajectory, and automated data intelligence."
       />
 
       {/* Dataset and Sheet Selector Toolbar */}
@@ -190,7 +232,7 @@ export function DashboardHome() {
 
       {loadingDashboard ? (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
-          Calculating live metrics for selected sheet...
+          Computing executive summary metrics for selected sheet...
         </div>
       ) : !dashboard ? (
         <Card>
@@ -203,7 +245,68 @@ export function DashboardHome() {
           {/* Key KPI Overview Cards */}
           <OverviewCards dashboard={dashboard} />
 
-          {/* Revenue Trend Chart & Product Breakdown */}
+          {/* Automated Executive Highlights Summary with 1-click Save to Insights */}
+          {dashboard.executiveInsights && dashboard.executiveInsights.length > 0 && (
+            <Card className="border border-border bg-card/90 p-5 shadow-sm">
+              <CardHeader className="space-y-1 p-0 pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Sparkles className="size-4" />
+                    <CardTitle className="text-sm font-semibold">Executive Highlights</CardTitle>
+                  </div>
+                  <Link to="/dashboard/analytics">
+                    <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary">
+                      Explore Deep Analytics &rarr;
+                    </Button>
+                  </Link>
+                </div>
+                <CardDescription className="text-xs">
+                  Automated strategic takeaways computed directly from {dashboard.sheetName || selectedSheet}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 pt-1">
+                  {dashboard.executiveInsights.map((insight, idx) => {
+                    const isSaved = savedBulletIndexes.has(idx);
+                    return (
+                      <div
+                        key={idx}
+                        className="rounded-2xl border border-border bg-muted/40 p-3 text-xs leading-relaxed text-foreground flex flex-col justify-between gap-2"
+                      >
+                        <div>
+                          <span className="font-semibold text-primary mr-1.5">•</span>
+                          {insight}
+                        </div>
+                        <div className="flex justify-end pt-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isSaved}
+                            onClick={() => handleSaveInsight(insight, idx)}
+                            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                          >
+                            {isSaved ? (
+                              <>
+                                <Check className="size-3 text-emerald-500" />
+                                Saved to Insights
+                              </>
+                            ) : (
+                              <>
+                                <BookmarkPlus className="size-3 text-primary" />
+                                Save Insight
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Revenue Trend Chart & Top Contributors */}
           <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
             {chartData.length > 0 ? (
               <RevenueTrend data={chartData} />
@@ -219,11 +322,11 @@ export function DashboardHome() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-primary">
                     <BarChart3 className="size-5" />
-                    <CardTitle className="text-base font-semibold">Top Products</CardTitle>
+                    <CardTitle className="text-base font-semibold">Top Contributors</CardTitle>
                   </div>
                   <Badge variant="secondary">{productBreakdown.length} items</Badge>
                 </div>
-                <CardDescription>Highest revenue contributors in this sheet</CardDescription>
+                <CardDescription>Primary revenue drivers in this sheet</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-3 p-0">
@@ -245,11 +348,16 @@ export function DashboardHome() {
                   ))
                 )}
 
-                <div className="pt-2">
-                  <Link to="/dashboard/ai-chat">
-                    <Button variant="outline" className="w-full inline-flex items-center justify-center gap-2">
-                      <Sparkles className="size-4" />
-                      Ask AI Analyst About This Sheet
+                <div className="pt-2 flex gap-2">
+                  <Link to="/dashboard/analytics" className="flex-1">
+                    <Button variant="default" size="sm" className="w-full text-xs">
+                      Deep Dive Analytics
+                    </Button>
+                  </Link>
+                  <Link to="/dashboard/ai-chat" className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full text-xs inline-flex items-center justify-center gap-1.5">
+                      <Sparkles className="size-3.5" />
+                      Ask AI Analyst
                     </Button>
                   </Link>
                 </div>
@@ -257,35 +365,100 @@ export function DashboardHome() {
             </Card>
           </div>
 
-          {/* Recent Datasets Table */}
-          <Card className="border border-border bg-card/90 shadow-sm">
-            <CardHeader className="space-y-1 p-5">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">Recent Datasets</CardTitle>
-                <Link to="/dashboard/datasets">
-                  <Button variant="ghost" size="sm">View all</Button>
-                </Link>
-              </div>
-              <CardDescription>Datasets currently indexed in your workspace</CardDescription>
-            </CardHeader>
-            <CardContent className="p-5 pt-0">
-              <div className="divide-y divide-border">
-                {datasets.slice(0, 4).map((d) => (
-                  <div key={d.id} className="flex items-center justify-between py-3">
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-medium text-foreground">{d.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {d.rowCount} rows • {d.columnCount} columns • {d.sheetNames?.length ?? 1} sheet(s)
-                      </p>
-                    </div>
-                    <Badge variant={d.id === selectedDatasetId ? "default" : "secondary"}>
-                      {d.id === selectedDatasetId ? "Active" : "Ready"}
-                    </Badge>
+          {/* Recent Insights & Reports Dual Grid */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Recent Saved Insights */}
+            <Card className="border border-border bg-card/90 shadow-sm">
+              <CardHeader className="space-y-1 p-5 pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Bookmark className="size-4" />
+                    <CardTitle className="text-base font-semibold">Saved Insights</CardTitle>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <Link to="/dashboard/insights">
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      View all ({recentInsights.length})
+                    </Button>
+                  </Link>
+                </div>
+                <CardDescription className="text-xs">
+                  Your curated library of discoveries and strategic observations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                {recentInsights.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2">
+                    No insights saved yet. Click "Save Insight" on any highlight above or in AI Chat.
+                  </p>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {recentInsights.map((ins) => (
+                      <div key={ins.id} className="py-2.5 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-foreground truncate">{ins.title}</p>
+                          <Badge variant="outline" className="text-[10px] capitalize">
+                            {ins.category}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground line-clamp-1">{ins.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Generated Reports */}
+            <Card className="border border-border bg-card/90 shadow-sm">
+              <CardHeader className="space-y-1 p-5 pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-primary">
+                    <FileText className="size-4" />
+                    <CardTitle className="text-base font-semibold">Executive Reports</CardTitle>
+                  </div>
+                  <Link to="/dashboard/reports">
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      View all ({recentReports.length})
+                    </Button>
+                  </Link>
+                </div>
+                <CardDescription className="text-xs">
+                  Generated strategic reports with exportable Markdown downloads
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                {recentReports.length === 0 ? (
+                  <div className="py-2 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      No reports generated yet. Export a full strategic audit for this dataset.
+                    </p>
+                    <Link to="/dashboard/reports">
+                      <Button variant="outline" size="sm" className="text-xs inline-flex items-center gap-1.5">
+                        <FileText className="size-3.5" />
+                        Generate Executive Report
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {recentReports.map((rep) => (
+                      <div key={rep.id} className="py-2.5 flex items-center justify-between">
+                        <div className="space-y-0.5 max-w-[240px]">
+                          <p className="text-xs font-semibold text-foreground truncate">{rep.title}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{rep.datasetName} • {rep.sheetName}</p>
+                        </div>
+                        <Link to="/dashboard/reports">
+                          <Button variant="ghost" size="sm" className="text-xs">
+                            View
+                          </Button>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </>
       )}
     </div>

@@ -1,3 +1,6 @@
 export * from "./dashboard"
 export * from "./datasets"
 export * from "./chat"
+export * from "./insights"
+export * from "./reports"
+export * from "./auth"

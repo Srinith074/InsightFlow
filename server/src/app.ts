@@ -6,6 +6,8 @@ import authRoutes from "./routes/auth.routes.js";
 import datasetRoutes from "./routes/dataset.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import insightRoutes from "./routes/insight.routes.js";
+import reportRoutes from "./routes/report.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -42,6 +44,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/datasets", datasetRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/insights", insightRoutes);
+app.use("/api/reports", reportRoutes);
 app.use(errorHandler);
 
 export default app;

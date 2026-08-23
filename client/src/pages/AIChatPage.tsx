@@ -16,9 +16,12 @@ import {
 } from "@/components/ui";
 import { fetchDatasets } from "@/services/datasets";
 import { askAI } from "@/services/chat";
+import { createSavedInsight } from "@/services/insights";
 import type { DatasetMetadata } from "@/types";
 import {
+  BookmarkPlus,
   Bot,
+  Check,
   Database,
   FileSpreadsheet,
   Send,
@@ -51,6 +54,7 @@ export function AIChatPage() {
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingDatasets, setLoadingDatasets] = useState(true);
+  const [savedMessageIds, setSavedMessageIds] = useState<Set<string>>(new Set());
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -144,6 +148,23 @@ export function AIChatPage() {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveMessageAsInsight = async (msg: Message) => {
+    if (!selectedDataset) return;
+    try {
+      await createSavedInsight({
+        datasetId: selectedDataset.id,
+        datasetName: selectedDataset.name,
+        sheetName: selectedSheet || "Sheet1",
+        title: `AI Finding: ${msg.message.slice(0, 45)}...`,
+        content: msg.message,
+        category: "general",
+      });
+      setSavedMessageIds((prev) => new Set([...prev, msg.id]));
+    } catch (error) {
+      console.error("Failed to save AI insight:", error);
     }
   };
 
@@ -296,6 +317,30 @@ export function AIChatPage() {
                     <span className="text-[10px] opacity-60">{m.timestamp}</span>
                   </div>
                   <p className="whitespace-pre-wrap">{m.message}</p>
+
+                  {isAI && m.id !== "welcome" && (
+                    <div className="mt-2 pt-2 border-t border-border/50 flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={savedMessageIds.has(m.id)}
+                        onClick={() => handleSaveMessageAsInsight(m)}
+                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                      >
+                        {savedMessageIds.has(m.id) ? (
+                          <>
+                            <Check className="size-3 text-emerald-500" />
+                            Saved to Insights
+                          </>
+                        ) : (
+                          <>
+                            <BookmarkPlus className="size-3 text-primary" />
+                            Save as Insight
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             );

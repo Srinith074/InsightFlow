@@ -12,7 +12,7 @@ export function LandingPage() {
           <div className="space-y-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <p className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-                <Sparkles className="size-4" /> Premium SaaS analytics
+                <Sparkles className="size-4" /> 100% Free AI Analytics Platform
               </p>
             </motion.div>
             <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="max-w-3xl text-5xl font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-6xl">
@@ -23,11 +23,11 @@ export function LandingPage() {
             </motion.p>
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="flex flex-col gap-4 sm:flex-row">
               <Link to="/register">
-                <Button className="min-w-40">Start free trial</Button>
+                <Button className="min-w-40">Get Started Free</Button>
               </Link>
               <Link to="/login">
                 <Button variant="outline" className="min-w-40 inline-flex items-center justify-center gap-2">
-                  View demo
+                  Sign In
                   <ArrowRight className="size-4" />
                 </Button>
               </Link>

@@ -4,6 +4,8 @@ import { AnalyticsPage } from "@/pages/AnalyticsPage"
 import { AIChatPage } from "@/pages/AIChatPage"
 import { DatasetsPage } from "@/pages/DatasetsPage"
 import { DashboardHome } from "@/pages/DashboardHome"
+import { InsightsPage } from "@/pages/InsightsPage"
+import { ReportsPage } from "@/pages/ReportsPage"
 import { LandingPage } from "@/pages/LandingPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { NotFoundPage } from "@/pages/NotFoundPage"
@@ -29,6 +31,8 @@ export function AppRoutes() {
         <Route index element={<DashboardHome />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="ai-chat" element={<AIChatPage />} />
+        <Route path="insights" element={<InsightsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
         <Route path="datasets" element={<DatasetsPage />} />
         <Route path="upload" element={<UploadPage />} />
         <Route path="profile" element={<ProfilePage />} />

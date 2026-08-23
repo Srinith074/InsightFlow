@@ -5,6 +5,8 @@ import multer from "multer";
 import {
   uploadDataset,
   getDatasets,
+  getDatasetPreview,
+  getDatasetSchema,
   deleteDataset,
 } from "../controllers/dataset.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
@@ -44,6 +46,20 @@ router.get(
   "/",
   authMiddleware,
   getDatasets
+);
+
+// Get Dataset Schema & Data Quality
+router.get(
+  "/:id/schema",
+  authMiddleware,
+  getDatasetSchema
+);
+
+// Get Dataset Preview (Paginated)
+router.get(
+  "/:id/preview",
+  authMiddleware,
+  getDatasetPreview
 );
 
 // Delete Dataset
