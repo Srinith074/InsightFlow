@@ -1,4 +1,4 @@
-import { type LucideIcon, BarChart3, FileText, FolderTree, Home, MessageCircle, Settings, UploadCloud, User } from "lucide-react"
+import { type LucideIcon, BarChart3, FolderTree, LayoutDashboard, Sparkles, UploadCloud, User } from "lucide-react"
 
 export interface NavigationItem {
   label: string
@@ -6,13 +6,24 @@ export interface NavigationItem {
   icon: LucideIcon
 }
 
-export const dashboardNavigation: NavigationItem[] = [
-  { label: "Home", path: "/dashboard", icon: Home },
+export interface NavigationSection {
+  title: string
+  items: NavigationItem[]
+}
+
+export const workspaceNavigation: NavigationItem[] = [
+  { label: "Overview", path: "/dashboard", icon: LayoutDashboard },
   { label: "Analytics", path: "/dashboard/analytics", icon: BarChart3 },
-  { label: "AI Chat", path: "/dashboard/ai-chat", icon: MessageCircle },
-  { label: "Reports", path: "/dashboard/reports", icon: FileText },
+  { label: "AI Analyst", path: "/dashboard/ai-chat", icon: Sparkles },
   { label: "Datasets", path: "/dashboard/datasets", icon: FolderTree },
+]
+
+export const managementNavigation: NavigationItem[] = [
   { label: "Upload", path: "/dashboard/upload", icon: UploadCloud },
-  { label: "Settings", path: "/dashboard/settings", icon: Settings },
   { label: "Profile", path: "/dashboard/profile", icon: User },
+]
+
+export const dashboardNavigation: NavigationItem[] = [
+  ...workspaceNavigation,
+  ...managementNavigation,
 ]

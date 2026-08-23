@@ -56,11 +56,6 @@ export function LoginPage() {
                 <Input id="password" type="password" {...register("password")} placeholder="••••••••" />
                 {errors.password ? <p className="text-sm text-destructive">{errors.password.message}</p> : null}
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <Link to="/forgot-password" className="text-primary underline">
-                  Forgot password?
-                </Link>
-              </div>
               <Button type="submit" disabled={isSubmitting} className="w-full">
                 {isSubmitting ? "Signing in..." : "Sign in"}
               </Button>

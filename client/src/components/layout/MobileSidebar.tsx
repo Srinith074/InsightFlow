@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 import { useUIStore } from "@/store/ui-store"
-import { dashboardNavigation } from "@/utils/navigation"
+import { workspaceNavigation, managementNavigation } from "@/utils/navigation"
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle, Separator } from "@/components/ui"
 import { NavLink } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -14,7 +14,7 @@ export function MobileSidebar() {
       <SheetContent side="left" className="w-[calc(100vw-2rem)] sm:w-[320px]">
         <SheetHeader>
           <div className="flex items-center justify-between gap-3">
-            <SheetTitle>InsightFlow menu</SheetTitle>
+            <SheetTitle>InsightFlow</SheetTitle>
             <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(false)}>
               <span className="sr-only">Close menu</span>
               <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
@@ -23,33 +23,69 @@ export function MobileSidebar() {
             </Button>
           </div>
         </SheetHeader>
+
         <Separator />
-        <motion.nav initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 px-1 py-4">
-          {dashboardNavigation.map((item) => {
-            const Icon = item.icon
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.path === "/dashboard"}
-                onClick={() => setMobileSidebarOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-medium transition",
-                    isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  )
-                }
-              >
-                <Icon className="size-5" />
-                {item.label}
-              </NavLink>
-            )
-          })}
-        </motion.nav>
-        <Separator />
-        <div className="px-4">
-          <Button className="w-full">Upgrade plan</Button>
-        </div>
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 px-1 py-4">
+          <div className="space-y-2">
+            <p className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Workspace
+            </p>
+            <nav className="space-y-1">
+              {workspaceNavigation.map((item) => {
+                const Icon = item.icon
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={item.path === "/dashboard"}
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                      )
+                    }
+                  >
+                    <Icon className="size-4" />
+                    {item.label}
+                  </NavLink>
+                )
+              })}
+            </nav>
+          </div>
+
+          <div className="space-y-2">
+            <p className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Management
+            </p>
+            <nav className="space-y-1">
+              {managementNavigation.map((item) => {
+                const Icon = item.icon
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                      )
+                    }
+                  >
+                    <Icon className="size-4" />
+                    {item.label}
+                  </NavLink>
+                )
+              })}
+            </nav>
+          </div>
+        </motion.div>
       </SheetContent>
     </Sheet>
   )

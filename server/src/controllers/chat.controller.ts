@@ -1,38 +1,42 @@
-import { Response } from "express";
-import * as XLSX from "xlsx";
+import type { Response } from "express";
 import fs from "fs";
+import mongoose from "mongoose";
+import * as XLSX from "xlsx";
 
-import type { RequestWithUser } from "../types/index.js";
 import Dataset from "../models/Dataset.js";
-
+import { calculateDashboard } from "../services/analytics.service.js";
+import { compareRevenue } from "../services/excel/compare.js";
+import { productionByMonth } from "../services/excel/production.js";
+import { revenueByMonth, revenueStats } from "../services/excel/revenue.js";
+import { totalSales } from "../services/excel/sales.js";
 import { extractIntent } from "../services/gemini/intent.js";
 import { generateResponse } from "../services/gemini/response.js";
+import type { RequestWithUser } from "../types/index.js";
 
-import { revenueByMonth } from "../services/excel/revenue.js";
-import { totalSales } from "../services/excel/sales.js";
-import { productionByMonth } from "../services/excel/production.js";
-import { compareRevenue } from "../services/excel/compare.js";
-
-export async function chat(
-  req: RequestWithUser,
-  res: Response
-) {
+export async function chat(req: RequestWithUser, res: Response) {
   try {
-    if (!req.user) {
+    const user = req.user;
+    if (!user) {
       return res.status(401).json({
         message: "Authentication required",
       });
     }
 
-    const {
-      datasetId,
-      sheetName,
-      message,
-    } = req.body;
+    const { datasetId, sheetName, message } = req.body as {
+      datasetId?: string;
+      sheetName?: string;
+      message?: string;
+    };
 
-    if (!datasetId || !sheetName || !message) {
+    if (!datasetId || !message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({
-        message: "Missing required fields",
+        message: "Dataset ID and message are required",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(datasetId)) {
+      return res.status(400).json({
+        message: "Invalid dataset ID",
       });
     }
 
@@ -44,116 +48,124 @@ export async function chat(
       });
     }
 
-    const buffer = fs.readFileSync(dataset.path);
+    if (String(dataset.owner) !== user.id) {
+      return res.status(403).json({
+        message: "Access denied",
+      });
+    }
 
+    if (!dataset.path || !fs.existsSync(dataset.path)) {
+      return res.status(404).json({
+        message: "Dataset file not found on server",
+      });
+    }
+
+    const buffer = fs.readFileSync(dataset.path);
     const workbook = XLSX.read(buffer, {
       type: "buffer",
       cellDates: true,
     });
 
-    console.log("==================================");
-    console.log("Available Sheets:");
-    console.log(workbook.SheetNames);
-    console.log("==================================");
-
-    const selectedSheet = workbook.Sheets[sheetName];
-
-    if (!selectedSheet) {
+    const availableSheets = workbook.SheetNames || [];
+    if (availableSheets.length === 0) {
       return res.status(400).json({
-        message: "Sheet not found",
+        message: "Workbook contains no sheets",
       });
     }
 
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-      selectedSheet,
-      {
-        defval: "",
-        raw: false,
-      }
-    );
+    const selectedSheetName = sheetName ? String(sheetName).trim() : availableSheets[0];
+    const sheet = workbook.Sheets[selectedSheetName];
 
-    console.log("Selected Sheet:", sheetName);
-    console.log("Rows:", rows.length);
-
-    if (rows.length > 0) {
-      console.log("First Row:");
-      console.log(rows[0]);
+    if (!sheet) {
+      return res.status(404).json({
+        message: `Sheet "${selectedSheetName}" not found`,
+        availableSheets,
+      });
     }
 
-    // --------------------------
-    // Step 1: Understand question
-    // --------------------------
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+      defval: "",
+    });
 
+    // ----------------------------------------------------
+    // Step 1: Understand question via AI / Rule Parser
+    // ----------------------------------------------------
     const intent = await extractIntent(message);
 
-    console.log("Detected Intent:");
-    console.log(intent);
-
-    let result: any = null;
-
-    // --------------------------
-    // Step 2: Execute Excel logic
-    // --------------------------
+    // ----------------------------------------------------
+    // Step 2: Deterministic computation from actual rows
+    // ----------------------------------------------------
+    let result: Record<string, unknown>;
 
     switch (intent.intent) {
       case "revenue":
-        result = revenueByMonth(
-          rows,
-          intent.month
-        );
+        result = revenueByMonth(rows, intent.month);
+        break;
+
+      case "average":
+      case "highest":
+      case "lowest":
+        result = revenueStats(rows, intent.month);
         break;
 
       case "sales":
-        result = totalSales(
-          rows,
-          intent.month
-        );
+        result = totalSales(rows, intent.month, intent.product);
         break;
 
       case "production":
-        result = productionByMonth(
-          rows,
-          intent.month
-        );
+        result = productionByMonth(rows, intent.month);
         break;
 
-      case "compare":
-        result = compareRevenue(
-          rows,
-          intent.months[0],
-          intent.months[1]
-        );
+      case "compare": {
+        const month1 = intent.months?.[0] || "January";
+        const month2 = intent.months?.[1] || "February";
+        result = compareRevenue(rows, month1, month2);
         break;
+      }
 
-      default:
+      case "row_count":
         result = {
-          error:
-            "Sorry, I couldn't understand the question.",
+          rowCount: rows.length,
+          columnCount: Object.keys(rows[0] || {}).length,
+          month: intent.month,
         };
+        break;
+
+      case "columns":
+        result = {
+          columns: Object.keys(rows[0] || {}),
+          columnCount: Object.keys(rows[0] || {}).length,
+        };
+        break;
+
+      case "summary":
+        result = calculateDashboard(rows) as unknown as Record<string, unknown>;
+        break;
+
+      default: {
+        // If question mentions a month, return revenue and stats for that month
+        if (intent.month) {
+          result = revenueStats(rows, intent.month);
+        } else {
+          result = calculateDashboard(rows) as unknown as Record<string, unknown>;
+        }
+        break;
+      }
     }
 
-    console.log("Excel Result:");
-    console.log(result);
-
-    // --------------------------
-    // Step 3: Generate response
-    // --------------------------
-
-    const answer = await generateResponse(
-      message,
-      result
-    );
+    // ----------------------------------------------------
+    // Step 3: Natural language explanation
+    // ----------------------------------------------------
+    const answer = await generateResponse(message, result);
 
     return res.json({
       answer,
+      sheetName: selectedSheetName,
     });
-
-  } catch (err: any) {
-    console.error("CHAT ERROR");
-    console.error(err);
-
+  } catch (error) {
+    console.error("Chat Error:", error);
     return res.status(500).json({
-      message: err.message || "Chat failed",
+      message: "Failed to process question",
     });
   }
 }

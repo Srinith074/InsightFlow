@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   LogOut,
-  Settings,
   User as UserIcon,
 } from "lucide-react";
 
@@ -74,14 +73,6 @@ export function ProfileMenu() {
         >
           <UserIcon className="size-4" />
           Profile
-        </DropdownMenuItem>
-
-        <DropdownMenuItem
-          onSelect={() => navigate("/dashboard/settings")}
-          className="flex items-center gap-2"
-        >
-          <Settings className="size-4" />
-          Settings
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

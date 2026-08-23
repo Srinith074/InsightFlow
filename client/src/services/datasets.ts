@@ -24,3 +24,8 @@ export async function uploadDataset(files: File[]): Promise<DatasetMetadata> {
 
   return response.data.dataset;
 }
+
+export async function deleteDataset(id: string): Promise<{ success: boolean; message: string }> {
+  const response = await api.delete<{ success: boolean; message: string }>(`/api/datasets/${id}`);
+  return response.data;
+}

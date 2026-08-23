@@ -11,16 +11,20 @@ export interface DashboardData {
     month: string;
     revenue: number;
   }[];
+  sheetName?: string;
+  availableSheets?: string[];
+  headers?: string[];
+  columnCount?: number;
 }
 
-export async function deleteDataset(id: string) {
-  return api.delete(`/api/datasets/${id}`);
-}
+export async function fetchDashboard(
+  datasetId: string,
+  sheetName?: string
+): Promise<DashboardData> {
+  const url = sheetName
+    ? `/api/dashboard/${datasetId}/sheet/${encodeURIComponent(sheetName)}`
+    : `/api/dashboard/${datasetId}`;
 
-export async function fetchDashboard(datasetId: string) {
-  const response = await api.get<DashboardData>(
-    `/api/dashboard/${datasetId}`
-  );
-
+  const response = await api.get<DashboardData>(url);
   return response.data;
 }

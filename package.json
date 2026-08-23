@@ -9,7 +9,8 @@
   "scripts": {
     "client": "npm --workspace client run dev",
     "server": "npm --workspace server run dev",
-    "build": "npm --workspace client run build && npm --workspace server run build"
+    "build": "npm --workspace client run build && npm --workspace server run build",
+    "start": "npm --workspace server run start"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.6.0",

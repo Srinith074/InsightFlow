@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import type { AxiosError } from "axios";
 import {
   useMutation,
@@ -10,6 +11,7 @@ import { SectionHeader } from "@/components/common/SectionHeader";
 import { FileUploadPanel } from "@/components/upload/FileUploadPanel";
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
@@ -106,18 +108,33 @@ export function UploadPage() {
               )}
 
               {uploadMutation.isSuccess && (
-                <div className="rounded-2xl bg-green-100 p-4 text-green-700">
-                  ✅ Dataset uploaded successfully.
+                <div className="rounded-2xl border border-green-200 bg-green-50/80 p-4 text-green-800 space-y-2">
+                  <p className="font-semibold text-sm">✅ Dataset uploaded and indexed successfully!</p>
+                  <p className="text-xs text-green-700">
+                    Your spreadsheet is parsed and ready for deterministic analytics and AI inquiries.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Link to="/dashboard">
+                      <Button size="sm" variant="default" className="text-xs">
+                        View Overview
+                      </Button>
+                    </Link>
+                    <Link to="/dashboard/ai-chat">
+                      <Button size="sm" variant="outline" className="text-xs">
+                        Open AI Analyst
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               )}
 
               <div>
-                <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold text-foreground">
                   Connected datasets
                 </p>
 
-                <p className="text-sm text-muted-foreground">
-                  All uploads are stored and accessible from the AI workspace.
+                <p className="text-xs text-muted-foreground">
+                  All uploads are isolated to your account and immediately accessible across analytics and chat.
                 </p>
               </div>
             </CardContent>
