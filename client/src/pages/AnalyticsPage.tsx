@@ -162,7 +162,7 @@ export function AnalyticsPage() {
               <select
                 value={selectedDatasetId}
                 onChange={(e) => handleDatasetChange(e.target.value)}
-                className="h-10 w-full rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
+                className="h-10 w-full cursor-pointer rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
               >
                 {datasets.map((dataset) => (
                   <option key={dataset.id} value={dataset.id}>
@@ -181,7 +181,7 @@ export function AnalyticsPage() {
                 <select
                   value={selectedSheet}
                   onChange={(e) => setSelectedSheet(e.target.value)}
-                  className="h-10 w-full rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
+                  className="h-10 w-full cursor-pointer rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
                 >
                   {sheetNames.map((sheet) => (
                     <option key={sheet} value={sheet}>

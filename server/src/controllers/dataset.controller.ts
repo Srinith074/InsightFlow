@@ -8,6 +8,10 @@ import {
   createDataset,
   getUserDatasets,
 } from "../services/dataset.service.js";
+import {
+  uploadFileToStorage,
+  deleteFileFromStorage,
+} from "../services/storage.service.js";
 import type { RequestWithUser } from "../types/index.js";
 
 export async function uploadDataset(
@@ -37,7 +41,14 @@ export async function uploadDataset(
   }
 
   try {
-    const buffer = fs.readFileSync(file.path);
+    const buffer = file.buffer || (file.path && fs.existsSync(file.path) ? fs.readFileSync(file.path) : null);
+
+    if (!buffer) {
+      return res.status(400).json({
+        message: "Unable to read uploaded file data",
+      });
+    }
+
     const workbook = XLSX.read(buffer, {
       type: "buffer",
       cellDates: true,
@@ -64,19 +75,39 @@ export async function uploadDataset(
       }
     }
 
-    const dataset = await createDataset({
-      owner: user.id,
-      name: file.originalname,
-      fileName: file.filename,
-      mimeType: file.mimetype,
-      size: file.size,
-      rowCount,
-      columnCount,
-      headers,
-      path: file.path,
-      sheetNames,
-      selectedSheet: firstSheet,
-    });
+    // Upload to durable object storage (MongoDB GridFS / S3 / Cloudinary)
+    const storageResult = await uploadFileToStorage(
+      buffer,
+      file.originalname,
+      file.mimetype
+    );
+
+    let dataset;
+    try {
+      dataset = await createDataset({
+        owner: user.id,
+        name: file.originalname,
+        fileName: file.filename || file.originalname,
+        mimeType: file.mimetype,
+        size: storageResult.size || file.size,
+        rowCount,
+        columnCount,
+        headers,
+        storageKey: storageResult.storageKey,
+        storageProvider: storageResult.storageProvider,
+        storageUrl: storageResult.storageUrl,
+        path: "",
+        sheetNames,
+        selectedSheet: firstSheet,
+      });
+    } catch (dbError) {
+      // Clean up storage artifact if database record creation fails
+      await deleteFileFromStorage({
+        storageKey: storageResult.storageKey,
+        storageProvider: storageResult.storageProvider,
+      });
+      throw dbError;
+    }
 
     return res.json({
       dataset: {
@@ -90,19 +121,14 @@ export async function uploadDataset(
         headers: dataset.headers,
         sheetNames: dataset.sheetNames,
         selectedSheet: dataset.selectedSheet,
+        storageKey: dataset.storageKey,
+        storageProvider: dataset.storageProvider,
+        storageUrl: dataset.storageUrl,
         createdAt: dataset.createdAt,
         updatedAt: dataset.updatedAt,
       },
     });
   } catch (error) {
-    if (file?.path && fs.existsSync(file.path)) {
-      try {
-        fs.unlinkSync(file.path);
-      } catch {
-        // ignore file unlink failure
-      }
-    }
-
     console.error("Upload error:", error);
     return res.status(500).json({
       message: "Failed to parse and store dataset",
@@ -136,6 +162,9 @@ export async function getDatasets(
       headers: dataset.headers,
       sheetNames: dataset.sheetNames,
       selectedSheet: dataset.selectedSheet,
+      storageKey: dataset.storageKey,
+      storageProvider: dataset.storageProvider,
+      storageUrl: dataset.storageUrl,
       createdAt: dataset.createdAt,
       updatedAt: dataset.updatedAt,
     })),
@@ -177,9 +206,8 @@ export async function deleteDataset(
       });
     }
 
-    if (dataset.path && fs.existsSync(dataset.path)) {
-      fs.unlinkSync(dataset.path);
-    }
+    // Delete from durable object storage (and local disk if legacy)
+    await deleteFileFromStorage(dataset);
 
     await dataset.deleteOne();
 

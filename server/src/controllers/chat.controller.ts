@@ -1,5 +1,4 @@
 import type { Response } from "express";
-import fs from "fs";
 import mongoose from "mongoose";
 import * as XLSX from "xlsx";
 
@@ -11,6 +10,7 @@ import { revenueByMonth, revenueStats } from "../services/excel/revenue.js";
 import { totalSales } from "../services/excel/sales.js";
 import { extractIntent } from "../services/gemini/intent.js";
 import { generateResponse } from "../services/gemini/response.js";
+import { getFileBufferFromStorage } from "../services/storage.service.js";
 import type { RequestWithUser } from "../types/index.js";
 
 export async function chat(req: RequestWithUser, res: Response) {
@@ -54,13 +54,18 @@ export async function chat(req: RequestWithUser, res: Response) {
       });
     }
 
-    if (!dataset.path || !fs.existsSync(dataset.path)) {
+    let buffer: Buffer;
+    try {
+      buffer = await getFileBufferFromStorage(dataset);
+    } catch (storageErr) {
       return res.status(404).json({
-        message: "Dataset file not found on server",
+        message:
+          storageErr instanceof Error
+            ? storageErr.message
+            : "Dataset file not found in storage. Please re-upload the dataset.",
       });
     }
 
-    const buffer = fs.readFileSync(dataset.path);
     const workbook = XLSX.read(buffer, {
       type: "buffer",
       cellDates: true,

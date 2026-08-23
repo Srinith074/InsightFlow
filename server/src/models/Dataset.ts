@@ -9,9 +9,11 @@ export interface DatasetDocument extends mongoose.Document {
   rowCount: number;
   columnCount: number;
   headers: string[];
-  path: string;
+  path?: string;
+  storageKey?: string;
+  storageProvider?: string;
+  storageUrl?: string;
 
-  // NEW
   sheetNames: string[];
   selectedSheet: string;
 
@@ -64,10 +66,24 @@ const datasetSchema = new mongoose.Schema<DatasetDocument>(
 
     path: {
       type: String,
-      required: true,
+      default: "",
     },
 
-    // NEW
+    storageKey: {
+      type: String,
+      default: "",
+    },
+
+    storageProvider: {
+      type: String,
+      default: "gridfs",
+    },
+
+    storageUrl: {
+      type: String,
+      default: "",
+    },
+
     sheetNames: {
       type: [String],
       default: [],

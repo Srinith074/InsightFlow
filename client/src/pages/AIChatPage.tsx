@@ -112,7 +112,7 @@ export function AIChatPage() {
     }
 
     const userMessage: Message = {
-      id: `user-${Date.now()}`,
+      id: `user-${crypto.randomUUID()}`,
       sender: "user",
       message: q,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -126,7 +126,7 @@ export function AIChatPage() {
       const answer = await askAI(selectedDatasetId, selectedSheet, q);
 
       const aiMessage: Message = {
-        id: `ai-${Date.now()}`,
+        id: `ai-${crypto.randomUUID()}`,
         sender: "ai",
         message: answer,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -136,7 +136,7 @@ export function AIChatPage() {
     } catch (err) {
       console.error("Chat error:", err);
       const errorMessage: Message = {
-        id: `error-${Date.now()}`,
+        id: `error-${crypto.randomUUID()}`,
         sender: "ai",
         message: "Sorry, I could not compute an answer for this question. Please verify your selected dataset and sheet.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -213,7 +213,7 @@ export function AIChatPage() {
               <select
                 value={selectedDatasetId}
                 onChange={(e) => handleDatasetChange(e.target.value)}
-                className="h-10 w-full rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
+                className="h-10 w-full cursor-pointer rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
               >
                 {datasets.map((dataset) => (
                   <option key={dataset.id} value={dataset.id}>
@@ -232,7 +232,7 @@ export function AIChatPage() {
                 <select
                   value={selectedSheet}
                   onChange={(e) => setSelectedSheet(e.target.value)}
-                  className="h-10 w-full rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
+                  className="h-10 w-full cursor-pointer rounded-2xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary sm:max-w-xs"
                 >
                   {sheetNames.map((sheet) => (
                     <option key={sheet} value={sheet}>
@@ -336,7 +336,7 @@ export function AIChatPage() {
                 type="button"
                 onClick={() => executeQuestion(prompt)}
                 disabled={loading}
-                className="whitespace-nowrap rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-foreground transition hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                className="whitespace-nowrap cursor-pointer rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-foreground transition hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {prompt}
               </button>

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Dataset from "../models/Dataset.js";
 
-export async function createDataset(data: {
+export interface CreateDatasetInput {
   owner: string;
   name: string;
   fileName: string;
@@ -10,31 +10,30 @@ export async function createDataset(data: {
   rowCount: number;
   columnCount: number;
   headers: string[];
-  path: string;
-
-  // NEW
   sheetNames: string[];
   selectedSheet: string;
-}) {
+  storageKey?: string;
+  storageProvider?: string;
+  storageUrl?: string;
+  path?: string;
+}
+
+export async function createDataset(data: CreateDatasetInput) {
   return Dataset.create({
     owner: new mongoose.Types.ObjectId(data.owner),
-
     name: data.name,
     fileName: data.fileName,
     mimeType: data.mimeType,
-
     size: data.size,
-
     rowCount: data.rowCount,
     columnCount: data.columnCount,
-
     headers: data.headers,
-
-    path: data.path,
-
-    // NEW
     sheetNames: data.sheetNames,
     selectedSheet: data.selectedSheet,
+    storageKey: data.storageKey || "",
+    storageProvider: data.storageProvider || "gridfs",
+    storageUrl: data.storageUrl || "",
+    path: data.path || "",
   });
 }
 

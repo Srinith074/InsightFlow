@@ -28,20 +28,28 @@ export function DatasetsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  async function loadDatasets() {
-    try {
-      setLoading(true);
-      const data = await fetchDatasets();
-      setDatasets(data);
-    } catch (error) {
-      console.error("Failed to load datasets:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    loadDatasets();
+    let isMounted = true;
+    async function loadData() {
+      try {
+        const data = await fetchDatasets();
+        if (isMounted) {
+          setDatasets(data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Failed to load datasets:", error);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   async function handleDelete(id: string) {

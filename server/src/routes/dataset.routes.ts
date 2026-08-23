@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 import { Router } from "express";
 import multer from "multer";
@@ -12,19 +11,19 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-const uploadDir = "uploads/";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
 const upload = multer({
-  dest: uploadDir,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 25 * 1024 * 1024, // 25 MB max
   },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if ([".csv", ".xls", ".xlsx"].includes(ext) || file.mimetype.includes("csv") || file.mimetype.includes("excel") || file.mimetype.includes("spreadsheetml")) {
+    if (
+      [".csv", ".xls", ".xlsx"].includes(ext) ||
+      file.mimetype.includes("csv") ||
+      file.mimetype.includes("excel") ||
+      file.mimetype.includes("spreadsheetml")
+    ) {
       cb(null, true);
     } else {
       cb(new Error("Only CSV, XLS, and XLSX files are allowed"));

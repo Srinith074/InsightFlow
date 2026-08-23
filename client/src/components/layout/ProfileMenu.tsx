@@ -22,10 +22,24 @@ export function ProfileMenu() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const handleProfileClick = () => {
+    navigate("/dashboard/profile");
+  };
+
+  const handleLogoutClick = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      navigate("/login");
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="inline-flex items-center gap-2 rounded-3xl px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+        className="inline-flex cursor-pointer items-center gap-2 rounded-3xl px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors outline-none select-none"
       >
         <Avatar size="sm">
           {user?.avatar ? (
@@ -40,27 +54,27 @@ export function ProfileMenu() {
           )}
         </Avatar>
 
-        <span className="hidden sm:inline">
+        <span className="hidden sm:inline font-medium">
           {user?.name ?? "Account"}
         </span>
 
-        <ChevronDown className="size-4" />
+        <ChevronDown className="size-4 opacity-70" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="end"
-        className="w-56 space-y-2 p-2"
+        className="w-56 space-y-2 p-2 shadow-lg"
       >
-        <div className="rounded-3xl border border-border bg-muted p-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-muted/60 p-3">
+          <p className="text-xs text-muted-foreground">
             Signed in as
           </p>
 
-          <p className="font-semibold text-foreground">
+          <p className="font-semibold text-sm text-foreground truncate">
             {user?.name ?? "Member"}
           </p>
 
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground truncate">
             {user?.email}
           </p>
         </div>
@@ -68,8 +82,9 @@ export function ProfileMenu() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          onSelect={() => navigate("/dashboard/profile")}
-          className="flex items-center gap-2"
+          onClick={handleProfileClick}
+          onSelect={handleProfileClick}
+          className="flex cursor-pointer items-center gap-2"
         >
           <UserIcon className="size-4" />
           Profile
@@ -78,8 +93,9 @@ export function ProfileMenu() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          onSelect={logout}
-          className="flex items-center gap-2 text-destructive"
+          onClick={handleLogoutClick}
+          onSelect={handleLogoutClick}
+          className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
         >
           <LogOut className="size-4" />
           Sign out

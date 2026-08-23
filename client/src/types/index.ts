@@ -40,6 +40,9 @@ export interface DatasetMetadata {
   headers: string[]
   sheetNames: string[]
   selectedSheet?: string
+  storageKey?: string
+  storageProvider?: string
+  storageUrl?: string
   createdAt: string
   updatedAt: string
 }
